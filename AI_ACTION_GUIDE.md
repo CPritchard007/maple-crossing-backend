@@ -15,16 +15,17 @@ The response is processed from left to right:
 
 The action command itself is never displayed as narration or spoken. Previous text stays visible during the map action and until another nonempty text segment replaces it. An action with no preceding text runs without speech and retains the previous overlay text. The app starts with no narration text.
 
-**Place an introduction before the action, and commentary about the resulting view after it.** Do not put all narration at the beginning if it should accompany several separate views.
+**Move to the location BEFORE talking about it. No exceptions.** Place the `geo` or `highlight` command before any narration that names, introduces, describes, or recommends that location, road, closure, detour, or crossing. The app must finish the camera animation before speaking about the resulting view. A `highlight` command already moves and frames the camera, so a separate `geo` is not required.
+
+Start the response with a map action. For every new location, use the order **map action → narration about that location → next map action → narration about the next location**. Never announce an upcoming location in the preceding narration (for example, “Next, let’s look at Lauzon Road”). When returning to a previously discussed location, focus it again before discussing it. This rule also applies to introductions, comparisons, summaries, demo responses, and closing recommendations; do not discuss an off-screen location before moving to it.
 
 Example:
 
 ```text
-Let’s look at the Windsor tunnel entrance.
 ((geo lat="42.3149" lng="-83.0364"))
-The map is now focused on the entrance. Next, I’ll highlight a section of Lauzon Road.
+The map is now focused on the Windsor tunnel entrance.
 ((highlight name="Lauzon Road" type="recommendation" path="42.326792,-82.9397677;42.3261168,-82.9393305;42.3254421,-82.938907;42.3246604,-82.9384236;42.3241214,-82.9380766;42.3236127,-82.9378624"))
-The green section shows the road segment. That completes this demonstration.
+The green section shows Lauzon Road. That completes this demonstration.
 ```
 
 This example demonstrates narration, a location move, a road highlight, and final narration. It makes no claim about current traffic conditions.
@@ -45,7 +46,7 @@ A bare `geo` command moves the camera to the coordinates without drawing an acti
 
 `path` contains semicolon-separated `latitude,longitude` pairs in the order the road follows. The app draws connected segments between these coordinates and frames the path with the camera. It does not snap coordinates to roads or look up geometry from `name`.
 
-Use verified road geometry when identifying an actual road. Do not invent a path and describe it as accurate. If geometry is unavailable, ask for it or use a verified point with `geo`. A road name alone is not a valid action.
+Use verified road geometry when identifying an actual road. This is required for demos and fictional traffic scenarios too: closures, waits, and tolls may be simulated, but road names and coordinates must be real and sourced. Never substitute invented roads or schematic paths. Preserve the source coordinates in road order and verify that detour segments connect and avoid the closed segment. Keep geometry sources in a companion reference file rather than spoken narration. If geometry is unavailable, ask for it or use a verified point with `geo`. A road name alone is not a valid action.
 
 The red example illustrates styling only; do not infer a real hazard from these example coordinates.
 
@@ -76,7 +77,7 @@ Use `highlight="destination"` for the larger destination marker:
 
 `waypoint` focuses the supplied geometry. `reroute` also focuses/highlights supplied geometry; it does **not** compute or change a navigation route. `terminate` ends the current notice after its preceding narration and map action; it does not close the app or its backend instance.
 
-**Do not place text or another command after `action="terminate"`.** For a closing sentence after the final map movement, omit `terminate` and let the response end naturally. If using `terminate`, place the closing narration before that command.
+**Do not place text or another command after `action="terminate"`.** For narration about the final location, omit `terminate` and let the response end naturally after that narration. If using `terminate`, first focus the final location with a non-terminating command, then narrate it, then terminate at the same geometry. Never use `terminate` to bypass the mandatory move-before-narration rule.
 
 Legacy combined commands are also supported:
 
@@ -89,7 +90,7 @@ Prefer `geo` for movement and `highlight` for drawing attention to a point or ro
 ## Visual behavior
 
 - Each map action replaces the previous action highlight; highlights do not accumulate.
-- The last highlight remains visible after the response finishes.
+- After the entire response finishes, including trailing speech, the app clears the action highlight and returns to the user’s location. If location permission was denied or no location is available, the last highlight remains visible. Pauses between streamed chunks or narration segments do not trigger a return. The frontend requests foreground location permission at startup; no extra AI action is needed.
 - Road highlights have a thick central line and pulsing outer layers.
 - Point and destination markers use different sizes, with destinations larger.
 - The web camera fits the geometry, allowing zoom up to 17 for highlights and 15 for bare location actions. Long paths may require a wider view.
@@ -98,6 +99,7 @@ Prefer `geo` for movement and `highlight` for drawing attention to a point or ro
 
 ## Formatting and validation
 
+- Every location-specific narration must follow the map action that focuses that location. No exceptions; check this ordering separately from parser validation.
 - Use lowercase command and attribute names exactly as documented.
 - Quote every attribute value with straight single or double quotes.
 - Separate attributes with whitespace.

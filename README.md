@@ -81,3 +81,6 @@ For Docker Compose, put these variables in an untracked `.env` or export them be
 The endpoint follows the existing anonymous API/CORS model; instance IDs are not authentication. Keep the backend private for personal use, or put authentication and rate limits at the gateway before exposing this billable endpoint publicly. There is no synthesis cache; repeated requests are billed again. No S3 bucket is required.
 
 Voice support: https://docs.aws.amazon.com/polly/latest/dg/neural-voices.html
+# Road closures
+
+`GET /api/road-closures` supplies current Windsor/Detroit closures from TomTom for default red hazard highlights. Set `TOMTOM_API_KEY` in `.env` and restart/rebuild the backend. See [ROAD_CLOSURES.md](ROAD_CLOSURES.md) for provider selection, configuration, regional coverage, caching and failure behavior.
